@@ -1,0 +1,27 @@
+# Xcode files
+.DS_Store
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.xcworkspace
+Pods/
+DerivedData/
+
+# API Key 
+Config.swift
+
+# Swift Package Manager
+/.build/
+/Packages/
+/Package.pins
+*.xcodeproj/project.xcworkspace/
+
+# Log files
+*.log
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.build/
