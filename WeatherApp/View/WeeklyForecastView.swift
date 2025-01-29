@@ -34,7 +34,7 @@ struct WeeklyForecastView: View {
                         .cornerRadius(15)
                     }
                 }
-                .padding(.horizontal, 55)
+                .padding(.horizontal, 65)
                 .padding(.vertical, 20)
             }
         }

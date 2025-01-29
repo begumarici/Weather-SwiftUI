@@ -11,6 +11,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var city: String?
+    private var previousCity: String? // Prevent unnecessary API calls by keeping previous city info
 
     override init() {
         super.init()
@@ -22,8 +23,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        DispatchQueue.main.async {
-            self.userLocation = location.coordinate
+        
+        DispatchQueue.global(qos: .userInitiated).async {
             self.reverseGeocode(location: location)
         }
     }
@@ -35,9 +36,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private func reverseGeocode(location: CLLocation) {
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
-            if let placemark = placemarks?.first {
+            guard let placemark = placemarks?.first, let newCity = placemark.locality else { return }
+
+            // If the city has not changed, do not make the API call
+            if newCity != self.previousCity {
                 DispatchQueue.main.async {
-                    self.city = placemark.locality // get city name
+                    self.city = newCity
+                    self.previousCity = newCity
                 }
             }
         }

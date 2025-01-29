@@ -54,22 +54,28 @@ class WeatherService {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                print("Network error: \(error?.localizedDescription ?? "Unknown error")")
-                completion(nil)
-                return
-            }
-
-            do {
-                let decodedData = try JSONDecoder().decode(T.self, from: data)
-                DispatchQueue.main.async {
-                    completion(decodedData)
+        DispatchQueue.global(qos: .background).async {
+            URLSession.shared.dataTask(with: url) { data, response, error in
+                guard let data = data, error == nil else {
+                    print("Network error: \(error?.localizedDescription ?? "Unknown error")")
+                    DispatchQueue.main.async {
+                        completion(nil)
+                    }
+                    return
                 }
-            } catch {
-                print("Error decoding JSON: \(error)")
-                completion(nil)
-            }
-        }.resume()
+
+                do {
+                    let decodedData = try JSONDecoder().decode(T.self, from: data)
+                    DispatchQueue.main.async {
+                        completion(decodedData)
+                    }
+                } catch {
+                    print("Error decoding JSON: \(error)")
+                    DispatchQueue.main.async {
+                        completion(nil)
+                    }
+                }
+            }.resume()
+        }
     }
 }
