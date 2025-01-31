@@ -4,6 +4,7 @@
 //
 //  Created by Begüm Arıcı on 25.01.2025.
 //
+
 import SwiftUI
 
 struct ContentView: View {
@@ -11,7 +12,8 @@ struct ContentView: View {
     @State private var dailyForecasts: [DailyForecast] = []
     @StateObject private var locationManager = LocationManager()
     @State private var isLoading = false
-
+    @State private var userCity: String? // user's current location
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -37,20 +39,38 @@ struct ContentView: View {
                 }
                 .padding(.top, 50)
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .onReceive(locationManager.$city) { city in
-                if let city = city {
-                    isLoading = true
-                    WeatherService().fetchWeather(for: city) { response in
-                        self.weather = response
-                        isLoading = false
+            .navigationBarTitle("", displayMode: .inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: SettingsView(selectedCity: $userCity)) {
+                        Image(systemName: "line.horizontal.3")
+                            .foregroundColor(.black)
+                            .font(.title)
                     }
-                    WeatherService().fetchForecast(for: city) { forecasts in
-                        self.dailyForecasts = forecasts ?? []
-                        isLoading = false
-                    }
+
                 }
+            }
+            .onReceive(locationManager.$city) { city in
+                if userCity == nil, let city = city {
+                    userCity = city
+                    fetchWeather(for: city)
+                }
+            }
+        }
+    }
+
+    private func fetchWeather(for city: String) {
+        isLoading = true
+        WeatherService().fetchWeather(for: city) { response in
+            DispatchQueue.main.async {
+                self.weather = response
+                self.isLoading = false
+            }
+        }
+
+        WeatherService().fetchForecast(for: city) { forecasts in
+            DispatchQueue.main.async {
+                self.dailyForecasts = forecasts ?? []
             }
         }
     }
@@ -59,8 +79,6 @@ struct ContentView: View {
         switch icon {
         case "01d", "01n": return "sunny"
         case "02d", "02n": return "cloudy"
-        case "03d", "03n": return "cloudy"
-        case "04d", "04n": return "cloudy"
         case "09d", "09n": return "rainy"
         case "10d", "10n": return "downpour"
         case "11d", "11n": return "thunder"
@@ -70,6 +88,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 #Preview {
     ContentView()
